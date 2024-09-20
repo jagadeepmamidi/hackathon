@@ -5,7 +5,6 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Wallet, UserCheck, Key } from 'lucide-react';
 
-
 const contractABI = [
   {
     "anonymous": false,
@@ -46,12 +45,29 @@ const contractABI = [
   }
 ];
 
-
 const contractAddress = "0xbACc90d5A0CaB656Dc5ed8149301F19D6FB7813D";
 
 function MetaMaskAuth({ onAuthenticated }) {
   const [account, setAccount] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isConnected, setIsConnected] = useState(false); // Added state for blockchain connection
+
+  // Function to check if the blockchain connection is successful
+  const checkBlockchainConnection = useCallback(async () => {
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      if (!provider) {
+        throw new Error("No Ethereum provider detected. Install MetaMask.");
+      }
+      const network = await provider.getNetwork();
+      toast.success(`Connected to the blockchain on network: ${network.name}`);
+      setIsConnected(true);
+    } catch (error) {
+      console.error("Blockchain connection error:", error.message);
+      toast.error(`Blockchain connection failed: ${error.message}`);
+      setIsConnected(false);
+    }
+  }, []);
 
   const checkAuthentication = useCallback(async (address) => {
     try {
@@ -60,25 +76,35 @@ function MetaMaskAuth({ onAuthenticated }) {
       const authenticated = await contract.isAuthenticated(address);
       setIsAuthenticated(authenticated);
     } catch (error) {
-      console.error(error);
-      toast.error("Failed to check authentication status");
+      console.error("Authentication check error:", error.message);
+      toast.error(`Failed to check authentication: ${error.message}`);
     }
   }, []);
 
   const checkConnection = useCallback(async () => {
-    const provider = await detectEthereumProvider();
-    if (provider) {
-      const accounts = await provider.request({ method: 'eth_accounts' });
-      if (accounts.length > 0) {
-        setAccount(accounts[0]);
-        checkAuthentication(accounts[0]);
+    try {
+      const provider = await detectEthereumProvider();
+      if (provider) {
+        const accounts = await provider.request({ method: 'eth_accounts' });
+        if (accounts.length > 0) {
+          setAccount(accounts[0]);
+          checkAuthentication(accounts[0]);
+        } else {
+          toast.warn("No connected accounts found. Please connect MetaMask.");
+        }
+      } else {
+        toast.error("MetaMask not detected. Please install MetaMask.");
       }
+    } catch (error) {
+      console.error("Connection check error:", error.message);
+      toast.error(`Failed to check MetaMask connection: ${error.message}`);
     }
   }, [checkAuthentication]);
 
   useEffect(() => {
     checkConnection();
-  }, [checkConnection]);
+    checkBlockchainConnection(); // Check blockchain connection on load
+  }, [checkConnection, checkBlockchainConnection]);
 
   async function connectWallet() {
     try {
@@ -91,8 +117,8 @@ function MetaMaskAuth({ onAuthenticated }) {
         toast.error("Please install MetaMask!");
       }
     } catch (error) {
-      console.error(error);
-      toast.error("Failed to connect wallet");
+      console.error("Wallet connection error:", error.message);
+      toast.error(`Failed to connect wallet: ${error.message}`);
     }
   }
 
@@ -109,8 +135,8 @@ function MetaMaskAuth({ onAuthenticated }) {
         onAuthenticated();
       }
     } catch (error) {
-      console.error(error);
-      toast.error("Authentication failed");
+      console.error("Authentication error:", error.message);
+      toast.error(`Authentication failed: ${error.message}`);
     }
   }
 
@@ -148,6 +174,11 @@ function MetaMaskAuth({ onAuthenticated }) {
                 <Key className="mr-2" size={20} />
                 Authenticate
               </button>
+            )}
+            {!isConnected && (
+              <div className="bg-red-100 border-l-4 border-red-500 p-4 flex items-center mt-4">
+                <p className="text-red-700">Blockchain connection failed. Please check your setup.</p>
+              </div>
             )}
           </div>
         )}

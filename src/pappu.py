@@ -3,12 +3,13 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for
 import os
 from web3 import Web3
 
-
 blockchain_url = "http://127.0.0.1:7545"  # Ensure this matches your Ganache or node setup
 web3 = Web3(Web3.HTTPProvider(blockchain_url))
 
 # Check if connected to blockchain
-if not web3.is_connected():
+if web3.is_connected():
+    print("Successfully connected to the blockchain.")
+else:
     raise Exception("Cannot connect to the blockchain. Please check Ganache is running.")
 
 contract_address = "0xbACc90d5A0CaB656Dc5ed8149301F19D6FB7813D"  # Replace with your deployed contract address
