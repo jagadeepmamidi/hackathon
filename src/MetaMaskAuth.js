@@ -50,28 +50,30 @@ const contractAddress = "0xbACc90d5A0CaB656Dc5ed8149301F19D6FB7813D";
 function MetaMaskAuth({ onAuthenticated }) {
   const [account, setAccount] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isConnected, setIsConnected] = useState(false); // Added state for blockchain connection
+  const [isConnected, setIsConnected] = useState(false);
 
-  // Function to check if the blockchain connection is successful
+  const getProvider = async () => {
+    const provider = await detectEthereumProvider();
+    if (!provider) throw new Error("No Ethereum provider detected. Install MetaMask.");
+    return new ethers.BrowserProvider(provider);
+  };
+
   const checkBlockchainConnection = useCallback(async () => {
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      if (!provider) {
-        throw new Error("No Ethereum provider detected. Install MetaMask.");
-      }
+      const provider = await getProvider();
       const network = await provider.getNetwork();
-      toast.success(`Connected to the blockchain on network: ${network.name}`);
+      toast.success(`Connected to network: ${network.name}`);
       setIsConnected(true);
     } catch (error) {
       console.error("Blockchain connection error:", error.message);
       toast.error(`Blockchain connection failed: ${error.message}`);
       setIsConnected(false);
     }
-  }, []);
+  }, [getProvider]);
 
   const checkAuthentication = useCallback(async (address) => {
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = await getProvider();
       const contract = new ethers.Contract(contractAddress, contractABI, provider);
       const authenticated = await contract.isAuthenticated(address);
       setIsAuthenticated(authenticated);
@@ -79,7 +81,7 @@ function MetaMaskAuth({ onAuthenticated }) {
       console.error("Authentication check error:", error.message);
       toast.error(`Failed to check authentication: ${error.message}`);
     }
-  }, []);
+  }, [getProvider]);
 
   const checkConnection = useCallback(async () => {
     try {
@@ -103,7 +105,7 @@ function MetaMaskAuth({ onAuthenticated }) {
 
   useEffect(() => {
     checkConnection();
-    checkBlockchainConnection(); // Check blockchain connection on load
+    checkBlockchainConnection();
   }, [checkConnection, checkBlockchainConnection]);
 
   async function connectWallet() {
@@ -124,7 +126,12 @@ function MetaMaskAuth({ onAuthenticated }) {
 
   async function authenticate() {
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      if (!account) {
+        toast.error("Please connect your wallet first!");
+        return;
+      }
+
+      const provider = await getProvider();
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(contractAddress, contractABI, signer);
       const tx = await contract.authenticate();
