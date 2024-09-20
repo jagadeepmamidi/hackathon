@@ -8,46 +8,46 @@ import { Wallet, UserCheck, Key } from 'lucide-react';
 
 const contractABI = [
   {
-    "inputs": [],
-    "name": "authenticate",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      }
-    ],
-    "name": "isAuthenticated",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
         "internalType": "address",
-        "name": "user",
+        "name": "provider",
         "type": "address"
       }
     ],
-    "name": "UserAuthenticated",
+    "name": "ServiceListed",
     "type": "event"
   }
 ];
-const contractAddress = "0x1234567890123456789012345678901234567890";
+
+
+const contractAddress = "0xbACc90d5A0CaB656Dc5ed8149301F19D6FB7813D";
 
 function MetaMaskAuth({ onAuthenticated }) {
   const [account, setAccount] = useState(null);
