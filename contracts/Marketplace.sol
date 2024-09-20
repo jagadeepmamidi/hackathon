@@ -13,6 +13,7 @@ contract Marketplace {
 
     uint public serviceCount = 0;
     mapping(uint => Service) public services;
+    mapping(address => bool) public authenticatedUsers; // New mapping for authenticated users
 
     event ServiceListed(
         uint id,
@@ -29,6 +30,8 @@ contract Marketplace {
         address provider,
         address buyer
     );
+    
+    event UserAuthenticated(address user); // Event for user authentication
 
     // Provider lists a service/product
     function listService(string memory _name, string memory _description, uint _price) public {
@@ -53,5 +56,17 @@ contract Marketplace {
         services[_id].isPurchased = true;  // Mark as purchased
 
         emit ServicePurchased(_id, _service.name, _service.price, _service.provider, msg.sender);
+    }
+
+    // New function to authenticate the user
+    function authenticate() public {
+        require(!authenticatedUsers[msg.sender], "User already authenticated");
+        authenticatedUsers[msg.sender] = true;
+        emit UserAuthenticated(msg.sender); // Emit event on successful authentication
+    }
+
+    // Function to check if the user is authenticated
+    function isAuthenticated(address _user) public view returns (bool) {
+        return authenticatedUsers[_user];
     }
 }
