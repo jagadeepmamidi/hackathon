@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
 import detectEthereumProvider from '@metamask/detect-provider';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Wallet, UserCheck, Key } from 'lucide-react';
+
 
 const contractABI = [
   {
@@ -48,15 +49,23 @@ const contractABI = [
 ];
 const contractAddress = "0x1234567890123456789012345678901234567890";
 
-function MetaMaskAuth() {
+function MetaMaskAuth({ onAuthenticated }) {
   const [account, setAccount] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  useEffect(() => {
-    checkConnection();
+  const checkAuthentication = useCallback(async (address) => {
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const contract = new ethers.Contract(contractAddress, contractABI, provider);
+      const authenticated = await contract.isAuthenticated(address);
+      setIsAuthenticated(authenticated);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to check authentication status");
+    }
   }, []);
 
-  async function checkConnection() {
+  const checkConnection = useCallback(async () => {
     const provider = await detectEthereumProvider();
     if (provider) {
       const accounts = await provider.request({ method: 'eth_accounts' });
@@ -65,7 +74,11 @@ function MetaMaskAuth() {
         checkAuthentication(accounts[0]);
       }
     }
-  }
+  }, [checkAuthentication]);
+
+  useEffect(() => {
+    checkConnection();
+  }, [checkConnection]);
 
   async function connectWallet() {
     try {
@@ -83,18 +96,6 @@ function MetaMaskAuth() {
     }
   }
 
-  async function checkAuthentication(address) {
-    try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const contract = new ethers.Contract(contractAddress, contractABI, provider);
-      const authenticated = await contract.isAuthenticated(address);
-      setIsAuthenticated(authenticated);
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to check authentication status");
-    }
-  }
-
   async function authenticate() {
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
@@ -104,6 +105,9 @@ function MetaMaskAuth() {
       await tx.wait();
       setIsAuthenticated(true);
       toast.success("Successfully authenticated!");
+      if (onAuthenticated) {
+        onAuthenticated();
+      }
     } catch (error) {
       console.error(error);
       toast.error("Authentication failed");

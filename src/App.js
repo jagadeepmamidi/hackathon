@@ -1,5 +1,6 @@
 import React from 'react';
 import MetaMaskAuth from './MetaMaskAuth';
+import Dashboard from './Dash';
 
 
 
@@ -8,7 +9,7 @@ function App() {
     <div className="App">
       <h1>MetaMask Authentication</h1>
       <MetaMaskAuth />
-      <MetaMaskAuth />
+      <Dashboard />
       
     </div>
   );
