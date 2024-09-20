@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import detectEthereumProvider from '@metamask/detect-provider';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Wallet, UserCheck, Key } from 'lucide-react';
+import { Wallet, UserCheck, Key, LogOut } from 'lucide-react';
 
 const contractABI = [
   {
@@ -42,22 +42,210 @@ const contractABI = [
     ],
     "name": "ServiceListed",
     "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "buyer",
+        "type": "address"
+      }
+    ],
+    "name": "ServicePurchased",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "UserAuthenticated",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "authenticatedUsers",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  },
+  {
+    "inputs": [],
+    "name": "serviceCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "services",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address payable",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "isPurchased",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_description",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_price",
+        "type": "uint256"
+      }
+    ],
+    "name": "listService",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_id",
+        "type": "uint256"
+      }
+    ],
+    "name": "purchaseService",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function",
+    "payable": true
+  },
+  {
+    "inputs": [],
+    "name": "authenticate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_user",
+        "type": "address"
+      }
+    ],
+    "name": "isAuthenticated",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
   }
 ];
 
-const contractAddress = "0xbACc90d5A0CaB656Dc5ed8149301F19D6FB7813D";
+const contractAddress = "0xdaAa574c0C0eEbf22cEeD8D278C60596BC58618B";
 
 function MetaMaskAuth({ onAuthenticated }) {
   const [account, setAccount] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(false); // Added state for blockchain connection
 
-  const getProvider = async () => {
-    const provider = await detectEthereumProvider();
-    if (!provider) throw new Error("No Ethereum provider detected. Install MetaMask.");
-    return new ethers.BrowserProvider(provider);
-  };
-
+  // Function to check if the blockchain connection is successful
   const checkBlockchainConnection = useCallback(async () => {
     try {
       const provider = await getProvider();
@@ -147,6 +335,12 @@ function MetaMaskAuth({ onAuthenticated }) {
     }
   }
 
+  function logout() {
+    setAccount(null);
+    setIsAuthenticated(false);
+    toast.info("Logged out successfully!");
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <ToastContainer />
@@ -182,6 +376,13 @@ function MetaMaskAuth({ onAuthenticated }) {
                 Authenticate
               </button>
             )}
+            <button
+              onClick={logout}
+              className="w-full bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-200 flex items-center justify-center"
+            >
+              <LogOut className="mr-2" size={20} />
+              Logout
+            </button>
             {!isConnected && (
               <div className="bg-red-100 border-l-4 border-red-500 p-4 flex items-center mt-4">
                 <p className="text-red-700">Blockchain connection failed. Please check your setup.</p>
