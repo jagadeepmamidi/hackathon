@@ -38,6 +38,12 @@ const contractABI = [
         "internalType": "address",
         "name": "provider",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "ipfsHash",
+        "type": "string"
       }
     ],
     "name": "ServiceListed",
@@ -166,6 +172,11 @@ const contractABI = [
         "internalType": "bool",
         "name": "isPurchased",
         "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "ipfsHash",
+        "type": "string"
       }
     ],
     "stateMutability": "view",
@@ -188,6 +199,11 @@ const contractABI = [
         "internalType": "uint256",
         "name": "_price",
         "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_ipfsHash",
+        "type": "string"
       }
     ],
     "name": "listService",
@@ -235,10 +251,67 @@ const contractABI = [
     "stateMutability": "view",
     "type": "function",
     "constant": true
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_id",
+        "type": "uint256"
+      }
+    ],
+    "name": "getService",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "id",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address payable",
+            "name": "provider",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPurchased",
+            "type": "bool"
+          },
+          {
+            "internalType": "string",
+            "name": "ipfsHash",
+            "type": "string"
+          }
+        ],
+        "internalType": "struct Marketplace.Service",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
   }
 ];
 
-const contractAddress = "0xdaAa574c0C0eEbf22cEeD8D278C60596BC58618B";
+const contractAddress = "0xff7DDb0D0CD05F08a299ae10d5a3ceC3F04fE10d";
 
 function MetaMaskAuth({ onAuthenticated }) {
   const [account, setAccount] = useState(null);
